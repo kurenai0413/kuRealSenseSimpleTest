@@ -107,7 +107,7 @@ int main()
 
 					if (uvx != -1 && uvy != -1)
 					{
-						cout << "DD" << endl;
+						//cout << "DD" << endl;
 					}
 				}
 			}
