@@ -1,3 +1,4 @@
+#include "pxcprojection.h"
 #include "pxcsensemanager.h"
 #include "opencv2/opencv.hpp"
 
@@ -24,46 +25,51 @@ int main()
 	PXCProjection * projection = NULL;
 	projection = device->CreateProjection();
 
-	IplImage *image = 0;
+	IplImage * image = 0;
 	CvSize gab_size;
 	gab_size.height = 480;
 	gab_size.width = 640;
 	image = cvCreateImage(gab_size, 8, 3);
 
-	IplImage *depth = 0;
+	IplImage * depth = 0;
 	depth = cvCreateImage(gab_size, 8, 1);
 
-	PXCImage::ImageData ColorData;
-	PXCImage::ImageData data_depth;
+	IplImage * AlignedDepth;
+	AlignedDepth = cvCreateImage(gab_size, 8, 1);
 
-	unsigned char	*	rgb_data;
-	//float			*	depth_data;
-
-	PXCImage::ImageInfo rgb_info;
+	
+	PXCImage::ImageInfo color_info;
 	PXCImage::ImageInfo depth_info;
+
+	PXCImage * color_image;
+	PXCImage * depth_image;
+	PXCImage * aligned_depth_image;
+
+	PXCImage::ImageData data_color;
+	PXCImage::ImageData data_depth;
+	PXCImage::ImageData data_aligned_depth;
 
 	for (;;)
 	{
 		if (psm->AcquireFrame(true)<PXC_STATUS_NO_ERROR) break;
 
-		PXCCapture::Sample *sample = psm->QuerySample();
-		PXCImage *colorIm, *depthIm;
-
+		PXCCapture::Sample * sample = psm->QuerySample();
+		
 		// retrieve the image or frame by type from the sample
-		colorIm = sample->color;
-		depthIm = sample->depth;
+		color_image = sample->color;
+		depth_image = sample->depth;
 
-		PXCImage *color_image = colorIm;
-		PXCImage *depth_image = depthIm;
+		color_info = color_image->QueryInfo();
+		depth_info = depth_image->QueryInfo();
 
-		PXCImage::ImageInfo dinfo = depth_image->QueryInfo();
-		PXCPointF32 * uvmap = new PXCPointF32[dinfo.width*dinfo.height];
+		color_image->AcquireAccess(PXCImage::ACCESS_READ, PXCImage::PIXEL_FORMAT_RGB24, &data_color);
+		depth_image->AcquireAccess(PXCImage::ACCESS_READ, PXCImage::PIXEL_FORMAT_DEPTH, &data_depth);
 
-		color_image->AcquireAccess(PXCImage::ACCESS_READ, PXCImage::PIXEL_FORMAT_RGB24, &ColorData);
-		depth_image->AcquireAccess(PXCImage::ACCESS_READ, &data_depth);
+		aligned_depth_image = projection->CreateDepthImageMappedToColor(depth_image, color_image);
 
-		rgb_data = ColorData.planes[0];
-		int cwidth = ColorData.pitches[0] / sizeof(int); /* aligned width */
+		aligned_depth_image->AcquireAccess(PXCImage::ACCESS_READ, PXCImage::PIXEL_FORMAT_DEPTH, &data_aligned_depth);
+
+		unsigned char	* rgb_data = data_color.planes[0];
 		for (int y = 0; y<480; y++)
 		{
 			for (int x = 0; x<640; x++)
@@ -78,7 +84,6 @@ int main()
 
 		
 		short* depth_data = (short*)data_depth.planes[0]; //
-		int dpitch = data_depth.pitches[0] / sizeof(short); /* aligned width */
 		for (int y = 0; y<480; y++)
 		{
 			for (int x = 0; x<640; x++)
@@ -87,56 +92,31 @@ int main()
 			}
 		}
 		
-		int uvpitch = depth_image->QueryInfo().width;
-
-		pxcStatus sts = projection->QueryUVMap(depth_image, uvmap);
-
-		IplImage * AlignedImage;
-		AlignedImage = cvCreateImage(CvSize(640,480),IPL_DEPTH_8U,1);
-		
-		for (int y = 0; y < AlignedImage->height; y++)
+		short * aligned_depht_data = (short*)data_aligned_depth.planes[0];
+		for (int y = 0; y<480; y++)
 		{
-			for (int x = 0; x < AlignedImage->width; x++)
+			for (int x = 0; x<640; x++)
 			{
-				short d = depth_data[dpitch * y + x];
-
-				if (d != invalid_value)
-				{
-					float uvx = uvmap[y*uvpitch + x].x;
-					float uvy = uvmap[y*uvpitch + x].y;
-
-					if (uvx != -1 && uvy != -1)
-					{
-						//cout << "DD" << endl;
-					}
-				}
+				AlignedDepth->imageData[y * 640 + x] = aligned_depht_data[y * 640 + x];
 			}
 		}
 
 		cvShowImage("ColorImage", image);
 		cvShowImage("DepthImage", depth);
+		cvShowImage("AlignedDepthImage", AlignedDepth);
 
 		cvSaveImage("ColorImage.jpg", image);
 		cvSaveImage("DepthImage.jpg", depth);
 
-		color_image->ReleaseAccess(&ColorData);
+		color_image->ReleaseAccess(&data_color);
 		depth_image->ReleaseAccess(&data_depth);
+		aligned_depth_image->ReleaseAccess(&data_aligned_depth);
 
 		if (cvWaitKey(10) >= 0)
 			break;
 
 		psm->ReleaseFrame();
-
 	}
-
-	//CalibrateColorAndDepthStream(PXCMCapture.Device device, PXCMImage depth, PXCMImage color, out PXCMImage output)
-	//{
-	//	PXCMProjection projection = device.CreateProjection();
-	//	output = projection.CreateDepthImageMappedToColor(depth, color);
-	//	projection.Dispose();
-	//}
-
-
 
 	cvReleaseImage(&image);
 	cvReleaseImage(&depth);
