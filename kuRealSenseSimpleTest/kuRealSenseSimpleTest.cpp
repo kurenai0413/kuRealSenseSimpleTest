@@ -34,8 +34,8 @@ int main()
 	IplImage * depth = 0;
 	depth = cvCreateImage(gab_size, 8, 1);
 
-	IplImage * AlignedDepth;
-	AlignedDepth = cvCreateImage(gab_size, 8, 1);
+	IplImage * aligned_depth;
+	aligned_depth = cvCreateImage(gab_size, 8, 1);
 
 	
 	PXCImage::ImageInfo color_info;
@@ -97,13 +97,13 @@ int main()
 		{
 			for (int x = 0; x<640; x++)
 			{
-				AlignedDepth->imageData[y * 640 + x] = aligned_depht_data[y * 640 + x];
+				aligned_depth->imageData[y * 640 + x] = aligned_depht_data[y * 640 + x];
 			}
 		}
 
 		cvShowImage("ColorImage", image);
 		cvShowImage("DepthImage", depth);
-		cvShowImage("AlignedDepthImage", AlignedDepth);
+		cvShowImage("AlignedDepthImage", aligned_depth);
 
 		cvSaveImage("ColorImage.jpg", image);
 		cvSaveImage("DepthImage.jpg", depth);
