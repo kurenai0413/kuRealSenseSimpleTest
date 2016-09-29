@@ -1,8 +1,5 @@
-#include "pxcprojection.h"
-#include "pxcsensemanager.h"
-#include "opencv2/opencv.hpp"
-
-#pragma comment(lib,"opencv_world310d")
+#include <time.h>
+#include "kuRealSenseHandler.h"
 
 using namespace std;
 using namespace cv;
@@ -41,33 +38,35 @@ int main()
 	PXCImage::ImageInfo color_info;
 	PXCImage::ImageInfo depth_info;
 
-	PXCImage * color_image;
-	PXCImage * depth_image;
-	PXCImage * aligned_depth_image;
+	kuRSFrameBundle RSFrame;
 
 	PXCImage::ImageData data_color;
 	PXCImage::ImageData data_depth;
 	PXCImage::ImageData data_aligned_depth;
 
+	time_t StartT, EndT;
+
 	for (;;)
 	{
+		StartT = clock();
+
 		if (psm->AcquireFrame(true)<PXC_STATUS_NO_ERROR) break;
 
 		PXCCapture::Sample * sample = psm->QuerySample();
 		
 		// retrieve the image or frame by type from the sample
-		color_image = sample->color;
-		depth_image = sample->depth;
+		RSFrame.ColorImg = sample->color;
+		RSFrame.DepthImg = sample->depth;
 
-		color_info = color_image->QueryInfo();
-		depth_info = depth_image->QueryInfo();
+		color_info = RSFrame.ColorImg->QueryInfo();
+		depth_info = RSFrame.DepthImg->QueryInfo();
 
-		color_image->AcquireAccess(PXCImage::ACCESS_READ, PXCImage::PIXEL_FORMAT_RGB24, &data_color);
-		depth_image->AcquireAccess(PXCImage::ACCESS_READ, PXCImage::PIXEL_FORMAT_DEPTH, &data_depth);
+		RSFrame.ColorImg->AcquireAccess(PXCImage::ACCESS_READ, PXCImage::PIXEL_FORMAT_RGB24, &data_color);
+		RSFrame.DepthImg->AcquireAccess(PXCImage::ACCESS_READ, PXCImage::PIXEL_FORMAT_DEPTH, &data_depth);
 
-		aligned_depth_image = projection->CreateDepthImageMappedToColor(depth_image, color_image);
+		RSFrame.AlignedDepthImg = projection->CreateDepthImageMappedToColor(RSFrame.DepthImg, RSFrame.ColorImg);
 
-		aligned_depth_image->AcquireAccess(PXCImage::ACCESS_READ, PXCImage::PIXEL_FORMAT_DEPTH, &data_aligned_depth);
+		RSFrame.AlignedDepthImg->AcquireAccess(PXCImage::ACCESS_READ, PXCImage::PIXEL_FORMAT_DEPTH, &data_aligned_depth);
 
 		unsigned char	* rgb_data = data_color.planes[0];
 		for (int y = 0; y<480; y++)
@@ -92,12 +91,12 @@ int main()
 			}
 		}
 		
-		short * aligned_depht_data = (short*)data_aligned_depth.planes[0];
+		short * aligned_depth_data = (short*)data_aligned_depth.planes[0];
 		for (int y = 0; y<480; y++)
 		{
 			for (int x = 0; x<640; x++)
 			{
-				aligned_depth->imageData[y * 640 + x] = aligned_depht_data[y * 640 + x];
+				aligned_depth->imageData[y * 640 + x] = aligned_depth_data[y * 640 + x];
 			}
 		}
 
@@ -105,17 +104,25 @@ int main()
 		cvShowImage("DepthImage", depth);
 		cvShowImage("AlignedDepthImage", aligned_depth);
 
-		cvSaveImage("ColorImage.jpg", image);
-		cvSaveImage("DepthImage.jpg", depth);
+		//cvSaveImage("ColorImage.jpg", image);
+		//cvSaveImage("DepthImage.jpg", depth);
 
-		color_image->ReleaseAccess(&data_color);
-		depth_image->ReleaseAccess(&data_depth);
-		aligned_depth_image->ReleaseAccess(&data_aligned_depth);
+		RSFrame.ColorImg->ReleaseAccess(&data_color);
+		RSFrame.DepthImg->ReleaseAccess(&data_depth);
+		RSFrame.AlignedDepthImg->ReleaseAccess(&data_aligned_depth);
+
+		EndT = clock();
+
+		float pt = difftime(EndT, StartT)/ CLOCKS_PER_SEC;
+		float fps = 1 / pt;
+
+		cout << fps << endl;
 
 		if (cvWaitKey(10) >= 0)
 			break;
 
 		psm->ReleaseFrame();
+		RSFrame.AlignedDepthImg->Release();
 	}
 
 	cvReleaseImage(&image);
