@@ -4,35 +4,37 @@
 using namespace std;
 using namespace cv;
 
-kuRealSenseHandler RSHandler;
+//kuRealSenseHandler RSHandler;
 
 int main()
 {
-	//PXCSenseManager * psm = 0;
-	//psm = PXCSenseManager::CreateInstance();
-	//if (!psm) 
+	//bool aa = RSHandler.kuRSInitDevice();
+
+	//if (aa)
 	//{
-	//	wprintf_s(L"Unable to create the PXCSenseManager\n");
-	//	system("pause");
+	//	RSHandler.kuStreamingStart();
 	//}
 
-	//psm->EnableStream(PXCCapture::STREAM_TYPE_COLOR, 640, 480); // Enable color stream
-	//psm->EnableStream(PXCCapture::STREAM_TYPE_DEPTH, 640, 480); // Enable depth stream
-	//psm->Init();												// Initial device
 
-	//PXCCapture::Device * device = psm->QueryCaptureManager()->QueryDevice();
-	//pxcU16 invalid_value = device->QueryDepthLowConfidenceValue();
-	//PXCProjection * projection = NULL;
-	//projection = device->CreateProjection();
-
-	bool aa = RSHandler.kuRSInitDevice();
-
-	if (aa)
+	PXCSenseManager * psm = 0;
+	psm = PXCSenseManager::CreateInstance();
+	if (!psm) 
 	{
-		RSHandler.kuStreamingStart();
+		wprintf_s(L"Unable to create the PXCSenseManager\n");
+		system("pause");
 	}
 
-	/*
+	psm->EnableStream(PXCCapture::STREAM_TYPE_COLOR, 640, 480); // Enable color stream
+	psm->EnableStream(PXCCapture::STREAM_TYPE_DEPTH, 640, 480); // Enable depth stream
+	psm->Init();												// Initial device
+
+	PXCCapture::Device * device = psm->QueryCaptureManager()->QueryDevice();
+	pxcU16 invalid_value = device->QueryDepthLowConfidenceValue();
+	PXCProjection * projection = NULL;
+	projection = device->CreateProjection();
+
+
+	
 	IplImage * image = 0;
 	CvSize gab_size;
 	gab_size.height = 480;
@@ -139,6 +141,6 @@ int main()
 	cvReleaseImage(&image);
 	cvReleaseImage(&depth);
 	psm->Release();
-	*/
+	
 	system("pause");
 }
