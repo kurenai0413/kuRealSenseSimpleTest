@@ -116,26 +116,21 @@ int main()
 		cvShowImage("ColorImage", image);
 		cvShowImage("DepthImage", depth);
 		cvShowImage("AlignedDepthImage", aligned_depth);
-
-		//cvSaveImage("ColorImage.jpg", image);
-		//cvSaveImage("DepthImage.jpg", depth);
+		cvWaitKey(10);
 
 		RSFrame.ColorImg->ReleaseAccess(&data_color);
 		RSFrame.DepthImg->ReleaseAccess(&data_depth);
 		RSFrame.AlignedDepthImg->ReleaseAccess(&data_aligned_depth);
 
+		psm->ReleaseFrame();
+		RSFrame.AlignedDepthImg->Release();
+
 		EndT = clock();
 
-		float pt = difftime(EndT, StartT)/ CLOCKS_PER_SEC;
+		float pt = difftime(EndT, StartT) / CLOCKS_PER_SEC;
 		float fps = 1 / pt;
 
 		cout << fps << endl;
-
-		if (cvWaitKey(10) >= 0)
-			break;
-
-		psm->ReleaseFrame();
-		RSFrame.AlignedDepthImg->Release();
 	}
 
 	cvReleaseImage(&image);
