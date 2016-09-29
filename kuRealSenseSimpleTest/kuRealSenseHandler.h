@@ -29,7 +29,7 @@ public:
 
 	void createIplImgs();
 	void releaseBundle();
-	void releasePXCImg(PXCImage * Img);
+	//void releasePXCImg(PXCImage * Img);
 };
 
 class kuRealSenseHandler
@@ -40,7 +40,7 @@ private:
 	PXCProjection		*	projection;
 	pxcU16					invalid_value;
 	
-	kuRSFrameBundle			RSFrame;
+	kuRSFrameBundle		*	RSFrame;
 
 	PXCImage::ImageInfo color_info;
 	PXCImage::ImageInfo depth_info;
@@ -67,10 +67,4 @@ public:
 	bool	kuRSInitDevice(void);
 	bool	kuStreamingStart(void);
 	void	kuStreamingStop(void);
-	void	kuRSStop(void);
-	void	kuRSCaptureColor(void);
-	void	kuRSCaptureDepth(void);
-	void	kuRSCaptureAlignedDepth(void);
-	void	KinectSetIntrinsicParam(cv::Mat IntParam);
-	//cv::Point3f KinectCal3DPoints(int x, int y);
 };

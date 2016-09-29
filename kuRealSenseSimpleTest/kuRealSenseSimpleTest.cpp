@@ -8,9 +8,9 @@ kuRealSenseHandler RSHandler;
 
 int main()
 {
-	bool aa = RSHandler.kuRSInitDevice();
+	bool RSInitialed = RSHandler.kuRSInitDevice();
 
-	if (aa)
+	if (RSInitialed)
 	{
 		RSHandler.kuStreamingStart();
 	}

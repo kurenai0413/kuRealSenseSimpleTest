@@ -32,10 +32,6 @@ void kuRSFrameBundle::createIplImgs()
 
 void kuRSFrameBundle::releaseBundle()
 {
-	//releasePXCImg(ColorImg);
-	//releasePXCImg(DepthImg);
-	//releasePXCImg(AlignedDepthImg);
-
 	if (ColorImg != NULL)
 	{
 		ColorImg->Release();
@@ -59,14 +55,14 @@ void kuRSFrameBundle::releaseBundle()
 	cvReleaseImage(&AlignedDepthIplImg);
 }
 
-void kuRSFrameBundle::releasePXCImg(PXCImage * Img)
-{
-	if (Img != NULL)
-	{
-		Img->Release();
-		Img = NULL;
-	}
-}
+//void kuRSFrameBundle::releasePXCImg(PXCImage * Img)
+//{
+//	if (Img != NULL)
+//	{
+//		Img->Release();
+//		Img = NULL;
+//	}
+//}
 
 
 kuRealSenseHandler::kuRealSenseHandler()
@@ -76,6 +72,8 @@ kuRealSenseHandler::kuRealSenseHandler()
 	projection	       = NULL;
 	isInitialized      = false;
 	isCamStreamStarted = false;
+
+	RSFrame = new kuRSFrameBundle;
 }
 
 
@@ -173,39 +171,40 @@ void kuRealSenseHandler::CamStreamProc()
 		PXCCapture::Sample * sample = psm->QuerySample();
 
 		// retrieve the image or frame by type from the sample
-		RSFrame.ColorImg = sample->color;
-		RSFrame.DepthImg = sample->depth;
+		RSFrame->ColorImg = sample->color;
+		RSFrame->DepthImg = sample->depth;
 
-		color_info = RSFrame.ColorImg->QueryInfo();
-		depth_info = RSFrame.DepthImg->QueryInfo();
+		color_info = RSFrame->ColorImg->QueryInfo();
+		depth_info = RSFrame->DepthImg->QueryInfo();
 
-		RSFrame.ColorImg->AcquireAccess(PXCImage::ACCESS_READ, PXCImage::PIXEL_FORMAT_RGB24, &data_color);
-		RSFrame.DepthImg->AcquireAccess(PXCImage::ACCESS_READ, PXCImage::PIXEL_FORMAT_DEPTH, &data_depth);
+		RSFrame->ColorImg->AcquireAccess(PXCImage::ACCESS_READ, PXCImage::PIXEL_FORMAT_RGB24, &data_color);
+		RSFrame->DepthImg->AcquireAccess(PXCImage::ACCESS_READ, PXCImage::PIXEL_FORMAT_DEPTH, &data_depth);
 
-		RSFrame.AlignedDepthImg = projection->CreateDepthImageMappedToColor(RSFrame.DepthImg, RSFrame.ColorImg);
-		RSFrame.AlignedDepthImg->AcquireAccess(PXCImage::ACCESS_READ, PXCImage::PIXEL_FORMAT_DEPTH, &data_aligned_depth);
+		RSFrame->AlignedDepthImg = projection->CreateDepthImageMappedToColor(RSFrame->DepthImg, RSFrame->ColorImg);
+		RSFrame->AlignedDepthImg->AcquireAccess(PXCImage::ACCESS_READ, PXCImage::PIXEL_FORMAT_DEPTH, &data_aligned_depth);
 
-		/* Change PXCImage to IplImage  */
+		/* Change PXCImage to IplImage */
 		//PXCImgData2IplImg(data_color, RSFrame.ColorIplImg);
 
-		thread ColorIplThread		 = thread(&kuRealSenseHandler::ColorImgData2IplImg, this, data_color, RSFrame.ColorIplImg);
-		thread DepthIplThread		 = thread(&kuRealSenseHandler::DepthImgData2IplImg, this, data_depth, RSFrame.DepthIplImg);
-		thread AlignedDepthIplThread = thread(&kuRealSenseHandler::DepthImgData2IplImg, this, data_aligned_depth, RSFrame.AlignedDepthIplImg);
+		// 這 樣 寫 對 效 能 幾 乎 沒 影 響 啦 幹 你 喵 喵 的
+		thread ColorIplThread		 = thread(&kuRealSenseHandler::ColorImgData2IplImg, this, data_color, RSFrame->ColorIplImg);
+		thread DepthIplThread		 = thread(&kuRealSenseHandler::DepthImgData2IplImg, this, data_depth, RSFrame->DepthIplImg);
+		thread AlignedDepthIplThread = thread(&kuRealSenseHandler::DepthImgData2IplImg, this, data_aligned_depth, RSFrame->AlignedDepthIplImg);
 		ColorIplThread.join();
 		DepthIplThread.join();
 		AlignedDepthIplThread.join();
 
-		cvShowImage("Color", RSFrame.ColorIplImg);
-		cvShowImage("Depth", RSFrame.DepthIplImg);
-		cvShowImage("Aligned Depth", RSFrame.AlignedDepthIplImg);
+		cvShowImage("Color", RSFrame->ColorIplImg);
+		cvShowImage("Depth", RSFrame->DepthIplImg);
+		cvShowImage("Aligned Depth", RSFrame->AlignedDepthIplImg);
 		waitKey(10);
 
-		RSFrame.ColorImg->ReleaseAccess(&data_color);
-		RSFrame.DepthImg->ReleaseAccess(&data_depth);
-		RSFrame.AlignedDepthImg->ReleaseAccess(&data_aligned_depth);
+		RSFrame->ColorImg->ReleaseAccess(&data_color);
+		RSFrame->DepthImg->ReleaseAccess(&data_depth);
+		RSFrame->AlignedDepthImg->ReleaseAccess(&data_aligned_depth);
 		
 		psm->ReleaseFrame();
-		RSFrame.AlignedDepthImg->Release();
+		RSFrame->AlignedDepthImg->Release();
 
 		EndT = clock();
 
