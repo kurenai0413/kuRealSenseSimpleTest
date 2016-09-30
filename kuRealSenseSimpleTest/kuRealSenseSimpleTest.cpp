@@ -15,5 +15,16 @@ int main()
 		RSHandler.kuStreamingStart();
 	}
 
+	for (;;)
+	{
+		if (RSHandler.isCopyDone)
+		{
+			cvShowImage("Color", RSHandler.RSFrame->ColorIplImg);
+			cvShowImage("Depth", RSHandler.RSFrame->DepthIplImg);
+			cvShowImage("AlignedDepthImage", RSHandler.RSFrame->AlignedDepthIplImg);
+			cvWaitKey(10);
+		}
+	}
+
 	system("pause");
 }

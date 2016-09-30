@@ -18,7 +18,6 @@ kuRSFrameBundle::~kuRSFrameBundle()
 	releaseBundle();
 }
 
-
 void kuRSFrameBundle::createIplImgs()
 {
 	CvSize gab_size;
@@ -186,6 +185,8 @@ void kuRealSenseHandler::CamStreamProc()
 		/* Change PXCImage to IplImage */
 		//PXCImgData2IplImg(data_color, RSFrame.ColorIplImg);
 
+		isCopyDone = false;
+
 		// 這 樣 寫 對 效 能 幾 乎 沒 影 響 啦 幹 你 喵 喵 的
 		thread ColorIplThread		 = thread(&kuRealSenseHandler::ColorImgData2IplImg, this, data_color, RSFrame->ColorIplImg);
 		thread DepthIplThread		 = thread(&kuRealSenseHandler::DepthImgData2IplImg, this, data_depth, RSFrame->DepthIplImg);
@@ -194,10 +195,7 @@ void kuRealSenseHandler::CamStreamProc()
 		DepthIplThread.join();
 		AlignedDepthIplThread.join();
 
-		cvShowImage("Color", RSFrame->ColorIplImg);
-		cvShowImage("Depth", RSFrame->DepthIplImg);
-		cvShowImage("Aligned Depth", RSFrame->AlignedDepthIplImg);
-		waitKey(10);
+		isCopyDone = true;
 
 		RSFrame->ColorImg->ReleaseAccess(&data_color);
 		RSFrame->DepthImg->ReleaseAccess(&data_depth);
