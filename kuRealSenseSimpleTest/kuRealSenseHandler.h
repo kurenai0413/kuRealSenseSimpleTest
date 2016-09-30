@@ -20,14 +20,9 @@ public:
 	PXCImage * DepthImg;
 	PXCImage * AlignedDepthImg;
 
-	IplImage * ColorIplImg;
-	IplImage * DepthIplImg;
-	IplImage * AlignedDepthIplImg;
-
 	kuRSFrameBundle();
 	~kuRSFrameBundle();
 
-	void createIplImgs();
 	void releaseBundle();
 };
 
@@ -49,8 +44,8 @@ private:
 	bool					isCamStreamStarted;
 	
 	void					CamStreamProc();
-	void					ColorImgData2IplImg(const PXCImage::ImageData &ColorData, IplImage * IplImg);
-	void					DepthImgData2IplImg(const PXCImage::ImageData &DepthData, IplImage * IplImg);
+	void					ColorImgData2IplImg(const PXCImage::ImageData &ColorData, Mat &CVImg);
+	void					DepthImgData2IplImg(const PXCImage::ImageData &DepthData, Mat &IplImg);
 
 public:
 
@@ -59,10 +54,14 @@ public:
 
 	kuRSFrameBundle		*	RSFrame;
 
-	bool	isInitialized;
-	bool	isCopyDone;
+	Mat						ColorCVImg;
+	Mat						DepthCVImg;
+	Mat						AlignedDepthCVImg;
 
-	bool	kuRSInitDevice(void);
-	bool	kuStreamingStart(void);
-	void	kuStreamingStop(void);
+	bool					isInitialized;
+	bool					isCopyDone;
+
+	bool					kuRSInitDevice(void);
+	bool					kuStreamingStart(void);
+	void					kuStreamingStop(void);
 };

@@ -19,9 +19,9 @@ int main()
 	{
 		if (RSHandler.isCopyDone)
 		{
-			cvShowImage("Color", RSHandler.RSFrame->ColorIplImg);
-			cvShowImage("Depth", RSHandler.RSFrame->DepthIplImg);
-			cvShowImage("AlignedDepthImage", RSHandler.RSFrame->AlignedDepthIplImg);
+			imshow("Color", RSHandler.ColorCVImg);
+			imshow("Depth", RSHandler.DepthCVImg);
+			imshow("Aligned Depth", RSHandler.AlignedDepthCVImg);
 			cvWaitKey(10);
 		}
 	}
