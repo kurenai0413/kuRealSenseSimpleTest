@@ -29,7 +29,6 @@ public:
 
 	void createIplImgs();
 	void releaseBundle();
-	//void releasePXCImg(PXCImage * Img);
 };
 
 class kuRealSenseHandler
@@ -40,9 +39,6 @@ private:
 	PXCCapture::Device	*	device;
 	PXCProjection		*	projection;
 	pxcU16					invalid_value;
-
-	PXCImage::ImageInfo		color_info;
-	PXCImage::ImageInfo		depth_info;
 
 	PXCImage::ImageData		data_color;
 	PXCImage::ImageData		data_depth;

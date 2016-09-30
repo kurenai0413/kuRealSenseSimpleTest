@@ -54,16 +54,6 @@ void kuRSFrameBundle::releaseBundle()
 	cvReleaseImage(&AlignedDepthIplImg);
 }
 
-//void kuRSFrameBundle::releasePXCImg(PXCImage * Img)
-//{
-//	if (Img != NULL)
-//	{
-//		Img->Release();
-//		Img = NULL;
-//	}
-//}
-
-
 kuRealSenseHandler::kuRealSenseHandler()
 {
 	psm			       = NULL;
@@ -172,9 +162,6 @@ void kuRealSenseHandler::CamStreamProc()
 		// retrieve the image or frame by type from the sample
 		RSFrame->ColorImg = sample->color;
 		RSFrame->DepthImg = sample->depth;
-
-		color_info = RSFrame->ColorImg->QueryInfo();
-		depth_info = RSFrame->DepthImg->QueryInfo();
 
 		RSFrame->ColorImg->AcquireAccess(PXCImage::ACCESS_READ, PXCImage::PIXEL_FORMAT_RGB24, &data_color);
 		RSFrame->DepthImg->AcquireAccess(PXCImage::ACCESS_READ, PXCImage::PIXEL_FORMAT_DEPTH, &data_depth);
